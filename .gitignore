@@ -1,0 +1,11 @@
+*.csv
+*.pdf
+*.rda
+*.rds
+*.RDA
+*.RDS
+*.xls
+*.bib
+*.xlsx
+.~lock*
+wheatPriceVolatility.R
