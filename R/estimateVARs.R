@@ -163,7 +163,7 @@ estimateVARs = function(priceCodes = c("SHUSGC1", "WENCPP1"), volatilityType = c
         endogen = cbind(usVolatility[-c(1:2)], russiaVolatility[-c(1:2)])
       }
        colnames(endogen) = priceCodes
-  varModel = VAR(y = endogen, type = "none", exogen = varExogenLagged, lag.max = 5)
+  varModel = VAR(y = endogen, type = "none", exogen = varExogenLagged, lag.max = 3, ic = "SC")
                      
 varTables = lapply(1:2, function(x){
   
