@@ -8,14 +8,9 @@ estimateGARCHs = function(priceCodes = wheatPriceList, indicatorType = c("policy
 if(frequency == "daily"){  
 data = readRDS("Data/garchDataLogged.RDA")
 modelSelectionTable = readRDS("Data/modelSelectionTable.RDA")
-ar = as.numeric(substring(modelSelectionTable[OriginalCode == x, arimaSpec], 3,3))
-ma = as.numeric(substring(modelSelectionTable[OriginalCode == x, arimaSpec], 9,9))
 }else if(frequency == "weekly"){
 data = readRDS("Data/garchDataLoggedWeekly.RDA")
-
 modelSelectionTable = readRDS("Data/weeklyModelSelectionTable.RDA")
-ar = 52
-ma = 0
 }
 
 data[, c("Export prohibition", "Export quota", "Export tax", "Export prohibitionNoPweight", "Export quotaNoPweight", "Export taxNoPweight") 
@@ -36,10 +31,17 @@ externalRegsWeightedMatrixSquared = externalRegsWeightedMatrix^2
 
 estimateGarchX = function(x){
   
+  if(frequency == "daily"){
+    ar = as.numeric(substring(modelSelectionTable[OriginalCode == x, arimaSpec], 3,3))
+    ma = as.numeric(substring(modelSelectionTable[OriginalCode == x, arimaSpec], 9,9))
+  }else if(frequency == "weekly"){
+    ar = 52
+    ma = 0
+  }
 
   testSpecX = ugarchspec(variance.model = list(model = "sGARCH", garchOrder = c(1,1),  external.regressors = externalRegsWeightedMatrixSquared), 
                          mean.model = list(armaOrder = c(ar,ma),
-                                           include.mean = TRUE, external.regressors = externalRegsWeightedMatrix), distribution.model = "norm")
+                                           include.mean = TRUE, external.regressors = NULL), distribution.model = "norm")
   
   testModelX = ugarchfit(testSpecX, diff(data[-(1:lag), get(x)]), solver.control=list(trace=0), solver="hybrid", fit.control =
                            list())
@@ -70,6 +72,10 @@ longGarchParams[, Estimate := paste(Estimate, Significance, sep ="")]
 wideGarchParams = dcast(longGarchParams, Parameter ~ OriginalCode, value.var = c("Estimate"))
 garchParameterExpressions = readRDS("Data/garchParameterExpressions.RDA")
 
+# quick fix
+garchParameterExpressions = garchParameterExpressions[c(15:20),]
+
+wideGarchParams = wideGarchParams[Parameter %in% garchParameterExpressions[, Parameter]]
 wideGarchParams[, Parameter := factor(as.character(Parameter), levels = garchParameterExpressions[, Parameter])]
 wideGarchParams = wideGarchParams[order(Parameter),]
 wideGarchParams[is.na(wideGarchParams)] = "-"
