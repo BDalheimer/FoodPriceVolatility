@@ -8,10 +8,14 @@ estimateGARCHs = function(priceCodes = wheatPriceList, indicatorType = c("policy
 if(frequency == "daily"){  
 data = readRDS("Data/garchDataLogged.RDA")
 modelSelectionTable = readRDS("Data/modelSelectionTable.RDA")
+ar = as.numeric(substring(modelSelectionTable[OriginalCode == x, arimaSpec], 3,3))
+ma = as.numeric(substring(modelSelectionTable[OriginalCode == x, arimaSpec], 9,9))
 }else if(frequency == "weekly"){
 data = readRDS("Data/garchDataLoggedWeekly.RDA")
 
 modelSelectionTable = readRDS("Data/weeklyModelSelectionTable.RDA")
+ar = 52
+ma = 0
 }
 
 data[, c("Export prohibition", "Export quota", "Export tax", "Export prohibitionNoPweight", "Export quotaNoPweight", "Export taxNoPweight") 
@@ -34,8 +38,7 @@ estimateGarchX = function(x){
   
 
   testSpecX = ugarchspec(variance.model = list(model = "sGARCH", garchOrder = c(1,1),  external.regressors = externalRegsWeightedMatrixSquared), 
-                         mean.model = list(armaOrder = c(as.numeric(substring(modelSelectionTable[OriginalCode == x, arimaSpec], 3,3)),
-                                                         as.numeric(substring(modelSelectionTable[OriginalCode == x, arimaSpec], 9,9))),
+                         mean.model = list(armaOrder = c(ar,ma),
                                            include.mean = TRUE, external.regressors = externalRegsWeightedMatrix), distribution.model = "norm")
   
   testModelX = ugarchfit(testSpecX, diff(data[-(1:lag), get(x)]), solver.control=list(trace=0), solver="hybrid", fit.control =

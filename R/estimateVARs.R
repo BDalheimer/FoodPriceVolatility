@@ -33,8 +33,32 @@ estimateVARs = function(priceCodes = c("SHUSGC1", "WENCPP1"), volatilityType = c
         volatility * sqrt(12)})
       
     }), start = c(2002, 1), end = c(2015,12), frequency = 12)
+  
+  ## workaround only weekly avaialble russian Data --> GATCH volatility and prick 3rd observation of each month
+  if(priceCodes %in% c("WECRPP1", "WENCPP1", "WESBPP1", "WEURPP1", "WEVRPP1", "WEUAPP1")){
+    garchDataWeekly = readRDS("Data/garchDataLoggedWeekly.RDA")
+    russiaPrice = ts(diff(garchDataWeekly[, get(priceCodes[2])]), start = c(2002, 01), frequency = 52)
+    testSpec = ugarchspec(variance.model = list(model = "sGARCH", garchOrder = c(1,1),  external.regressors = NULL), 
+                          mean.model = list(armaOrder = c(52,0),
+                                            include.mean = TRUE, external.regressors = NULL), distribution.model = "norm")
+    
+    testModel = ugarchfit(testSpec, russiaPrice, solver.control=list(trace = 0), solver="hybrid", fit.control =
+                            list())
+    
+    
+    volatility = sigma(testModel) * sqrt(52)
+    
+    russiaVolatility = ts(volatility, start = c(2002, 1), frequency = 52)
+    russiaVolatility
+  }else{
+    russiaVolatility = monthlyVolatilites[, priceCodes[2]]
+    seasonalityControlRussia = arima((monthlyVolatilites[2], order = c(12,0,0)))
+  }
+  
+  seasonalityControlUS = residuals(arima(monthlyVolatilites[1], order = c(12,0,0)))
+  
   usVolatility = monthlyVolatilites[, priceCodes[1]]
-  russiaVolatility = monthlyVolatilites[, priceCodes[2]]
+  
   
 }else if(volatilityType == "GARCH"){
   garchData = readRDS("Data/garchDataLoggedWeekly.RDA")
@@ -45,8 +69,7 @@ estimateVARs = function(priceCodes = c("SHUSGC1", "WENCPP1"), volatilityType = c
     
     
     testSpec = ugarchspec(variance.model = list(model = "sGARCH", garchOrder = c(1,1),  external.regressors = NULL), 
-                          mean.model = list(armaOrder = c(as.numeric(substring(weeklyModelSelectionTable[OriginalCode == x, arimaSpec], 3,3)),
-                                                          as.numeric(substring(weeklyModelSelectionTable[OriginalCode == x, arimaSpec], 9,9))),
+                          mean.model = list(armaOrder = c(52,0),
                                             include.mean = TRUE, external.regressors = NULL), distribution.model = "norm")
     
     testModel = ugarchfit(testSpec, diff(garchData[, get(x)]), solver.control=list(trace=0), solver="hybrid", fit.control =
@@ -163,6 +186,10 @@ estimateVARs = function(priceCodes = c("SHUSGC1", "WENCPP1"), volatilityType = c
         endogen = cbind(usVolatility[-c(1:2)], russiaVolatility[-c(1:2)])
       }
        colnames(endogen) = priceCodes
+       if(frequency == "monthly"){
+         varExogenLagged = cbind(varExogenLagged, )
+         varModel = VAR(y = endogen, type = "none", exogen = varExogenLagged, lag.max = 3, ic = "SC")
+       }
   varModel = VAR(y = endogen, type = "none", exogen = varExogenLagged, lag.max = 3, ic = "SC")
                      
 varTables = lapply(1:2, function(x){
