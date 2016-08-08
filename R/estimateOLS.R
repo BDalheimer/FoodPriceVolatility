@@ -2,7 +2,7 @@
 library(data.table)
 library(xts)
 library(dynlm)
-
+library(nlme)
 estimateOLS = function(indicatorType = c("policyTradeWeight","TradeWeight")){
   
   garchData = readRDS("Data/garchDataLogged.RDA")
@@ -47,8 +47,10 @@ estimateOLS = function(indicatorType = c("policyTradeWeight","TradeWeight")){
   OLSData = ts(cbind.data.frame(monthlyVolatilites, monthlyIndicators), start = c(2002, 1), end = c(2015,12), frequency = 12)
   OLSData[is.na(OLSData)] = 0
   
+  
   olsModels = lapply(wheatPriceList, function(x){
-    ols = dynlm(data = OLSData, get(x) ~ L(`Export prohibition`) + L(`Export quota`) + L(`Export tax`))
+    seasonalityControl = residuals(arima(OLSData[, x], order = c(12,0,0)))
+    ols = dynlm(data = OLSData, get(x) ~ L(get(x)) + L(`Export prohibition`) + L(`Export quota`) + L(`Export tax`) + seasonalityControl)
     
     
     model = as.data.table(coef(summary(ols)), keep.rownames = T)

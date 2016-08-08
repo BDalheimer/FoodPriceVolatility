@@ -190,10 +190,13 @@ estimateVARs = function(priceCodes = c("SHUSGC1", "WENCPP1"), volatilityType = c
       }
        colnames(endogen) = priceCodes
        if(frequency == "monthly"){
+         names(seasonalityControlUS) = "seasonalityControlUS"
+         seasonalityControlUS = matrix(seasonalityControlUS)
+         colnames(seasonalityControlUS) = "seasonalityControlUS"
          varExogenLagged = cbind(varExogenLagged, seasonalityControlUS[-c(1:2)])
-         varModel = VAR(y = endogen, type = "none", exogen = varExogenLagged, lag.max = 3, ic = "SC")
+         varModel = VAR(y = endogen, type = "none", exogen = varExogenLagged, lag.max = 3, ic = "SC", type = "both")
        }
-  varModel = VAR(y = endogen, type = "none", exogen = varExogenLagged, lag.max = 3, ic = "SC")
+  varModel = VAR(y = endogen, type = "none", exogen = varExogenLagged, lag.max = 3, ic = "SC", type = "both")
                      
 varTables = lapply(1:2, function(x){
   

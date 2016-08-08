@@ -12,7 +12,7 @@ source("R/policyStringData.R")
 
 amisData = readRDS("Data/standardizedDailyAmisData.RDA")
 
-oecdData = readRDS("nonAmisData.RDA")
+oecdData = readRDS("Data/nonAmisData.RDA")
 policyData = rbind(amisData, oecdData)
 policyData[, value := as.numeric(value)]
 stretchedPolicyData = rbindlist(lapply(unique(policyData[, cpl_id ]), policyTimeSeries, frequency = frequency, policyData = policyData)) 
