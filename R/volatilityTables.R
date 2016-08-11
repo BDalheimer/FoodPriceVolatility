@@ -73,7 +73,7 @@ data.table(Series = x, Mean = mean(volatility), SD = sd(volatility), Min = min(v
   names(volatilities) = wheatPriceList
   weeklyVolatilities = rbindlist(volatilities)
   weeklyVolatilities[, start := "1/2002"]
-  weeklyVolatilities[, end := "52/2012"]
+  weeklyVolatilities[, end := "52/2015"]
   setcolorder(weeklyVolatilities, c("Series", "start", "end", "Mean", "SD", "Min", "Max", "Skewness", "Kurtosis"))
   
    return(list(realizedTable =realizedTable[], weeklyVolatilities = weeklyVolatilities[]))
