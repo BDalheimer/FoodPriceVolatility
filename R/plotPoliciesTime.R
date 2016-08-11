@@ -4,9 +4,9 @@ plotPoliciesTime = function(frequency = "daily"){
   library(RColorBrewer)
   
   if(frequency == "daily"){
-  plotDataWide = readRDS("Data/indicatorPolicyWeighted.RDA")
+  plotDataWide = readRDS("Data/indicatorPolicyWeightedNotLogged.RDA")
   }else if(frequency == "monthly"){
-  plotDataWide = readRDS("Data/indicatorPolicyWeightedMonthly.RDA")
+  plotDataWide = readRDS("Data/indicatorPolicyWeightedMonthlyNotLogged.RDA")
   }
   
   plotData = melt(plotDataWide, id.vars = "timeLine", measure.vars = c("Export prohibition", "Export quota", "Export tax"), variable.name = "policyType", value.name = "indicatorLevel")
