@@ -122,15 +122,16 @@ estimateVARs = function(priceCodes = c("SHUSGC1", "WENCPP1"), volatilityType = c
                      }else if(indicatorType == "TradeWeight"){
                        if(frequency == "monthly"){
                          indicators = readRDS("Data/indicatorNoPolicyWeightedMonthly.RDA")
+                         indicators = indicators[, .(`Export prohibition`, `Export quota`, `Export tax`)]
                        }else{
                          countryIndicators = data.table(readRDS("Data/indicatorNoPolicyWeighted.RDA"))
                          setnames(countryIndicators, "timeLine", "Date")
                          intermediateData = merge(garchData[, .(Date)], countryIndicators, by = "Date", all.x = T)
-                         indicators = as.matrix(intermediateData)
+                         indicators = intermediateData
                        }
 
                        indicators[is.na(indicators)] = 0
-                       names(indicators) = c("timeLine", "Export prohibition", "Export quota", "Export tax", "quotaBans")
+                       names(indicators) = c("timeLine", "Export prohibition", "Export quota", "Export tax")
                        monthlyIndicators = ts(indicators[, .(`Export prohibition`, `Export quota`, `Export tax`)], 
                                               start = c(2002, 1), end = c(2015,12), frequency = 12)
                        varExogenLagged = embed(monthlyIndicators, 3)
