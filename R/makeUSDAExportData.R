@@ -10,6 +10,7 @@ worldWheatExports = psdExportData[Country == "World",]
 worldWheatExportsLong = melt(worldWheatExports, id = "Country", variable.name = "period", value.name = "worldExports")
 worldWheatExportsLong = worldWheatExportsLong[, -"Country", with=F]
 worldWheatExportsLong[, period := gsub("X", "", period)]
+worldWheatExportsLong[, period := substring(period, 1,4)]
 psdExportData[, iso3c := as.character(countrycode(Country, 
                                                   origin = "country.name", 
                                                   destination = "iso3c", 
@@ -18,10 +19,23 @@ psdExportData[, iso3c := as.character(countrycode(Country,
 exportData = psdExportData[, -"Country", with=F]
 exportLongData = melt(exportData, id = "iso3c", variable.name = "period", value.name = "exports")
 exportLongData[, period := gsub("X", "", period)]
+exportLongData[, period := substring(period, 1,4)]
 
+if(aggregateRussia == T){
+  russiaAggregate = data.table(aggregate(data =exportLongData[iso3c %in% c("KAZ", "RUS", "UKR", "KGZ"), ], exports ~ period, sum))
+  
+  russiaAggregate[, iso3c := "RUK"]
+  
+  exportLongData = rbind(exportLongData[!iso3c %in% c("KAZ", "RUS", "UKR", "KGZ"), ], russiaAggregate)
+}
 
 exportShareData = merge(exportLongData, worldWheatExportsLong, by = "period")
-exportShareData[, period := substring(period, 1,4)]
+
+
+
+
 exportShareData[ ,exportShare := exports / worldExports]
 
-saveRDS(exportShareData, "Data/usdaExportData.RDA")
+if(save == T){
+saveRDS(exportShareData, paste("Data/usdaExportData", if(aggregateRussia == T){ "RusAgg" }, ".RDA", sep =""))
+}
